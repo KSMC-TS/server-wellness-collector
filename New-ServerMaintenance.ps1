@@ -57,7 +57,7 @@ $addtlmaint = @() # Populate with additional maintenance types
         return $HWInfo 
     }
 
-    # Calculate Server uptime      
+    # Calculate last boot time     
     Function Get-SrvUptime {
         param ([string]$ComputerName = $env:COMPUTERNAME,[string]$PSVer)
         if ($PSVer -ge "6") {
@@ -69,18 +69,23 @@ $addtlmaint = @() # Populate with additional maintenance types
             $Uptime =  $System.ConvertToDateTime($System.LastBootUpTime)
         }
 
-        Write-Output ":::System uptime:::"
+        Write-Output ":::Last System Boot Time:::"
         Return $Uptime
     }
 
     # Collect Windows Roles currently installed
     function Get-Roles {
-        Invoke-WebRequest -Uri https://raw.githubusercontent.com/KSMC-TS/server-wellness-collector/main/roles.txt -OutFile C:\temp\roles.txt
-        $includedroles = Get-Content -Path C:\temp\roles.txt
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/KSMC-TS/server-wellness-collector/main/roles.txt" -OutFile $basepath\roles.txt
+        $includedroles = Get-Content -Path $basepath\roles.txt
         $roles = (($includedroles | ForEach-Object {[regex]::Escape($_)}) -join "|")
-    
-        $installedroles = Get-WindowsFeature | Where-Object {($_.InstallState -eq "Installed") -and ($_.name -match $roles)} | Select-Object Name
-        
+
+        try {
+            $installedroles = Get-WindowsFeature | Where-Object {($_.InstallState -eq "Installed") -and ($_.name -match $roles)} -ErrorAction SilentlyContinue | Select-Object Name 
+        } 
+        catch { 
+            $installedroles = Write-Output "Unable to enumerate installed roles, check WMI configuration"
+        } 
+
         # If roles are detected, start respective separate maintenance script
         Switch ($installedroles.name) {            
             "AD-Domain-Services" {$addtlmaint += "Start-ADMaintenance -basepath $basepath"}
