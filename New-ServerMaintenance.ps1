@@ -74,7 +74,7 @@ $addtlmaint = @() # Populate with additional maintenance types
 
     # Collect Windows Roles currently installed
     function Get-Roles {
-        Invoke-WebRequest -Uri https://raw.githubusercontent.com/russelljt/servermaintenance/master/roles.txt -OutFile C:\temp\roles.txt
+        Invoke-WebRequest -Uri https://raw.githubusercontent.com/KSMC-TS/server-wellness-collector/main/roles.txt -OutFile C:\temp\roles.txt
         $includedroles = Get-Content -Path C:\temp\roles.txt
         $roles = (($includedroles | ForEach-Object {[regex]::Escape($_)}) –join "|")
     
