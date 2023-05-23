@@ -7,12 +7,13 @@ $evtlogsummary = @() # create log summary
 $addtlmaint = @() # Populate with additional maintenance types
 # $basepath = "C:\temp"
 
-# region additional maintenance functions
+# region 
+# additional maintenance functions start here
     function Start-ADMaintenance {
         param(
             [Parameter(Mandatory=$true)]$basepath
         )
-        Invoke-Webrequest -Uri https://raw.githubusercontent.com/russelljt/servermaintenance/master/New-ADMaintenance.ps1 -OutFile $basepath\New-ADMaintenance.ps1
+        Invoke-Webrequest -Uri https://raw.githubusercontent.com/KSMC-TS/server-wellness-collector/main/New-ADMaintenance.ps1 -OutFile $basepath\New-ADMaintenance.ps1
         Start-Sleep -Seconds 10
         powershell.exe -command "$basepath\New-ADMaintenance.ps1 -basepath $basepath"
     }
