@@ -111,7 +111,7 @@ function Start-ADMaintenance{
     $maintfile = "maint_report-AD-$env:USERDOMAIN-"+(Get-Date -Format "MMddyyyy")+".log"
     $maintlog = "$maintpath\$maintfile"
 
-    if (Test-Path $maintpath -eq $True) { 
+    if (Test-Path $maintpath) { 
         Write-Verbose "($maintpath) already exists" -Verbose 
     } else { 
         New-Item -ItemType Directory -Path $maintpath -Force
