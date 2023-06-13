@@ -7,9 +7,9 @@ $evtlogsummary = @() # create log summary
 
 # region additional maintenance functions
     function Start-ADMaintenance {
-        Invoke-Webrequest -Uri https://raw.githubusercontent.com/russelljt/servermaintenance/master/New-ADMaintenance.ps1 -OutFile $basepath\New-ADMaintenance.ps1
+        Invoke-Webrequest -Uri https://raw.githubusercontent.com/KSMC-TS/server-wellness-collector/main/New-ADMaintenance.ps1 -OutFile $basepath\New-ADMaintenance.ps1
         Start-Sleep -Seconds 10
-        powershell.exe -command "$psscriptroot\New-ADMaintenance.ps1 -basepath $basepath"
+        powershell.exe -command "$basepath\New-ADMaintenance.ps1 -basepath $basepath"
     }
 
 # endregion
