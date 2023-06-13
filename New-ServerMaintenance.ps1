@@ -4,18 +4,12 @@ param(
 
 $EventLogNames = @("Application", "System")
 $evtlogsummary = @() # create log summary
-$addtlmaint = @() # Populate with additional maintenance types
-# $basepath = "C:\temp"
 
-# region 
-# additional maintenance functions start here
+# region additional maintenance functions
     function Start-ADMaintenance {
-        param(
-            [Parameter(Mandatory=$true)]$basepath
-        )
-        Invoke-Webrequest -Uri https://raw.githubusercontent.com/KSMC-TS/server-wellness-collector/main/New-ADMaintenance.ps1 -OutFile $basepath\New-ADMaintenance.ps1
+        Invoke-Webrequest -Uri https://raw.githubusercontent.com/russelljt/servermaintenance/master/New-ADMaintenance.ps1 -OutFile $basepath\New-ADMaintenance.ps1
         Start-Sleep -Seconds 10
-        powershell.exe -command "$basepath\New-ADMaintenance.ps1 -basepath $basepath"
+        powershell.exe -command "$psscriptroot\New-ADMaintenance.ps1 -basepath $basepath"
     }
 
 # endregion
@@ -57,7 +51,7 @@ $addtlmaint = @() # Populate with additional maintenance types
         return $HWInfo 
     }
 
-    # Calculate last boot time     
+    # Calculate Server uptime      
     Function Get-SrvUptime {
         param ([string]$ComputerName = $env:COMPUTERNAME,[string]$PSVer)
         if ($PSVer -ge "6") {
@@ -69,32 +63,21 @@ $addtlmaint = @() # Populate with additional maintenance types
             $Uptime =  $System.ConvertToDateTime($System.LastBootUpTime)
         }
 
-        Write-Output ":::Last System Boot Time:::"
+        Write-Output ":::System uptime:::"
         Return $Uptime
     }
 
     # Collect Windows Roles currently installed
     function Get-Roles {
-        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/KSMC-TS/server-wellness-collector/main/roles.txt" -OutFile $basepath\roles.txt
-        $includedroles = Get-Content -Path $basepath\roles.txt
+        Invoke-WebRequest -Uri https://raw.githubusercontent.com/russelljt/servermaintenance/master/roles.txt -OutFile C:\temp\roles.txt
+        $includedroles = Get-Content -Path C:\temp\roles.txt
         $roles = (($includedroles | ForEach-Object {[regex]::Escape($_)}) -join "|")
-
-        try {
-            $installedroles = Get-WindowsFeature | Where-Object {($_.InstallState -eq "Installed") -and ($_.name -match $roles)} -ErrorAction SilentlyContinue | Select-Object Name 
-        } 
-        catch { 
-            $installedroles = Write-Output "Unable to enumerate installed roles, check WMI configuration"
-        } 
-
-        # If roles are detected, start respective separate maintenance script
-        Switch ($installedroles.name) {            
-            "AD-Domain-Services" {$addtlmaint += "Start-ADMaintenance -basepath $basepath"}
-            # "FS-DFS-Replication" {$addtlmaint += }
-            # "Hyper-V" {$addtlmaint += }
-        }
+    
+        $installedroles = Get-WindowsFeature | Where-Object {($_.InstallState -eq "Installed") -and ($_.name -match $roles)} | Select-Object Name
+        
         Write-Output ":::Installed Server Roles:::"
         return $installedroles | Format-Table -Autosize
-    } 
+    }
 
     # Collect PowerShell version information
     Function Get-PSVersion {
@@ -374,15 +357,14 @@ $addtlmaint = @() # Populate with additional maintenance types
             Write-Output `n
             Write-Output ("######################### Maintenance Report Complete #########################")
 
-        ) *>&1 >> $maintlog
+            # If roles are detected, start respective separate maintenance script
+            Switch ($installedroles.name) {            
+                "AD-Domain-Services" { Start-ADMaintenance }
+                # "FS-DFS-Replication" {$addtlmaint += }
+                # "Hyper-V" {$addtlmaint += }
+            }
 
+        ) *>&1 >> $maintlog
     }
 
     Start-Maintenance -basepath $basepath
-
-    if ($addtlmaint -gt 0){
-        foreach ($addtl in $addtlmaint){
-            $addtl
-            # Start-Sleep -Seconds 300
-        }
-    }
