@@ -1,7 +1,7 @@
 param(
-    [Parameter(Mandatory=$true)]$basepath
+    [Parameter()]$basepath
     )
-
+    
 $EventLogNames = @("DFS Replication", "Directory Service", "DNS Server")
 $evtlogsummary = @() # create log summary
 
@@ -139,11 +139,10 @@ function Start-ADMaintenance{
         Write-Output "*** Replication Status ***"
         $replstatus.repsum
         Write-Output `n
-        Write-Output "*** Replication Status ***"
+        Write-Output "*** Event Logs ***"
         $events
 
     ) *>&1 >> $maintlog
-    
 }
 
 Start-ADMaintenance -basepath $basepath
